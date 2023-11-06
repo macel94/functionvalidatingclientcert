@@ -12,13 +12,15 @@ Export-Certificate -Cert "cert:\LocalMachine\My\$($cert.Thumbprint)" -FilePath $
 $certBytes = Get-Content -Path $exportPath -Encoding Byte
 $base64Cert = [System.Convert]::ToBase64String($certBytes)
 
+$base64Cert
+
 # Prepare the header with the Base64 encoded certificate
 $headers = @{
     "X-ARR-ClientCert" = $base64Cert
 }
 
 # Invoke the API request with the certificate in the header
-$response = Invoke-RestMethod -Uri "http://localhost:7164/api/ValidateCertAuth" -Method Get -Headers $headers
+$response = Invoke-RestMethod -Uri "https://functionthatvalidatescertificatesinheader20231106164839.azurewebsites.net/api/ValidateCertAuth" -Method Get -Headers $headers
 
 $response
 
