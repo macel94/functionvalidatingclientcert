@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34221.43
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FunctionThatValidatesCertificatesInHeader", "FunctionThatValidatesCertificatesInHeader\FunctionThatValidatesCertificatesInHeader.csproj", "{F6855586-3E77-40F8-8F13-0DB5375BDB22}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunctionThatValidatesCertificatesInHeader", "FunctionThatValidatesCertificatesInHeader\FunctionThatValidatesCertificatesInHeader.csproj", "{F6855586-3E77-40F8-8F13-0DB5375BDB22}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{BA1F3365-23A0-45D0-91ED-286446B4A147}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
