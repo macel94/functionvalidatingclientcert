@@ -3,7 +3,7 @@ $functionAppName = "FunctionThatValidatesCertificatesInHeaderFBelacca1"
 $tenantId = "6998af00-286c-4e5e-8b3e-713471e8487f"
 
 # Log in to Azure
-az login --tenant $tenantId
+#az login --tenant $tenantId
 az account set --subscription $subscriptionId
 
 # Register or update API application in Azure AD
@@ -43,25 +43,26 @@ if ([string]::IsNullOrEmpty($existingApiApp)) {
     
     # Generate a new GUID for the permission
     $newPermissionId = [guid]::NewGuid().ToString()
-    $apiAppPermissions = @(
-        @{
-            "allowedMemberTypes" = @("Application");
-            "description" = "Access as an application";
-            "displayName" = "Access as an application";
-            "id" = $newPermissionId;
-            "isEnabled" = $true;
-            "value" = $functionAppName+"User";
-        }
-    )
-    # Convert to JSON with correct depth
-    $jsonApiAppPermissions = $apiAppPermissions | ConvertTo-Json -Depth 10
-    # Now minify it into a single line
-    $jsonApiAppPermissions = $jsonApiAppPermissions -replace '\r\n',''
-    $jsonApiAppPermissions = "'$jsonApiAppPermissions'"
-    Write-Host "JSON API App Permissions: $jsonApiAppPermissions"
+    # Create the appRoles structure as individual objects
+    $apiAppPermission = @{
+        "allowedMemberTypes" = @("Application");
+        "description" = "Access as an application";
+        "displayName" = "Access as an application";
+        "id" = [guid]::NewGuid().ToString();
+        "isEnabled" = $true;
+        "value" = $functionAppName + "User";
+    }
+
+    # Construct the --set argument in dot-notation format
+    $setArgument = "appRoles[0].allowedMemberTypes=`"$($apiAppPermission.allowedMemberTypes[0])`" " +
+                "appRoles[0].description=`"$($apiAppPermission.description)`" " +
+                "appRoles[0].displayName=`"$($apiAppPermission.displayName)`" " +
+                "appRoles[0].id=`"$($apiAppPermission.id)`" " +
+                "appRoles[0].isEnabled=`"$($apiAppPermission.isEnabled)`" " +
+                "appRoles[0].value=`"$($apiAppPermission.value)`""
 
     # Update the API app registration with the new permission
-    az ad app update --id $apiApp --set appRoles=$jsonApiAppPermissions
+    az ad app update --id $apiApp --set $setArgument
 }
 
 # # Register or update client application in Azure AD
