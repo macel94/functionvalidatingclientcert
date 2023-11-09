@@ -19,6 +19,12 @@ namespace FunctionThatValidatesCertificatesInHeader
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestData req)
         {
             _logger.LogInformation("C# HTTP trigger to validate the certificate.");
+            // Log all headers
+            foreach (var header in req.Headers)
+            {
+                _logger.LogInformation($"Header '{header.Key}': '{string.Join(",", header.Value)}'");
+            }
+
             var response = req.CreateResponse(HttpStatusCode.OK);
 
             if (req.Headers.TryGetValues("X-ARR-ClientCert", out var certs))

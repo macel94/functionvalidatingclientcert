@@ -1,6 +1,10 @@
+Import-Module AzureAD -UseWindowsPowerShell
+
+# Install-Module -Name AzureAD -AllowClobber -Force
 $subscriptionId = "6a37c895-4239-4b1e-bc34-a48c4994cc8a"
 $functionAppName = "FunctionThatValidatesCertificatesInHeaderFBelacca1"
 $tenantId = "6998af00-286c-4e5e-8b3e-713471e8487f"
+
 
 # Log in to Azure
 #az login --tenant $tenantId
@@ -11,59 +15,41 @@ $apiAppName = "$functionAppName-api"
 $apiAppIdentifierUri = "api://$functionAppName"
 Write-Host "API App Name: $apiAppName"
 Write-Host "API App Identifier URI: $apiAppIdentifierUri"
-# Check if the app already exists
-$existingApiApp = az ad app list --filter "displayName eq '$apiAppName'" --query "[].appId" -o tsv
-if ([string]::IsNullOrEmpty($existingApiApp)) {
-    Write-Host "API App does not exist. Creating..."
-    # Create new app if it doesn't exist
-    $apiApp = az ad app create --display-name $apiAppName --identifier-uris $apiAppIdentifierUri --query "appId" -o tsv
-    # Generate a new GUID for the permission
-    $newPermissionId = [guid]::NewGuid().ToString()
-    # Define the new permission in the API app registration
-    $apiAppPermissions = @(
-        @{
-            "allowedMemberTypes" = @("Application");
-            "description" = "Access as an application";
-            "displayName" = "Access as an application";
-            "id" = $newPermissionId;
-            "isEnabled" = $true;
-            "value" = "access_as_application";
-        }
-    )
-    # Convert to JSON with correct depth
-    $jsonApiAppPermissions = $apiAppPermissions | ConvertTo-Json -Depth 10
-    # Update the API app registration with the new permission
-    az ad app update --id $apiApp --set appRoles=$jsonApiAppPermissions
-} else {
-    Write-Host "Existing API App: $existingApiApp"
-    # Update existing app
-    $apiApp = $existingApiApp
-    # Uncomment only if needed, useless if the app already has the correct identifier URI
-    # az ad app update --id $existingApiApp --identifier-uris $apiAppIdentifierUri
-    
-    # Generate a new GUID for the permission
-    $newPermissionId = [guid]::NewGuid().ToString()
-    # Create the appRoles structure as individual objects
-    $apiAppPermission = @{
-        "allowedMemberTypes" = @("Application");
-        "description" = "Access as an application";
-        "displayName" = "Access as an application";
-        "id" = [guid]::NewGuid().ToString();
-        "isEnabled" = $true;
-        "value" = $functionAppName + "User";
-    }
+# Log in to AzureAD PowerShell module
+Connect-AzureAD -TenantId $tenantId
 
-    # Construct the --set argument in dot-notation format
-    $setArgument = "appRoles[0].allowedMemberTypes=`"$($apiAppPermission.allowedMemberTypes[0])`" " +
-                "appRoles[0].description=`"$($apiAppPermission.description)`" " +
-                "appRoles[0].displayName=`"$($apiAppPermission.displayName)`" " +
-                "appRoles[0].id=`"$($apiAppPermission.id)`" " +
-                "appRoles[0].isEnabled=`"$($apiAppPermission.isEnabled)`" " +
-                "appRoles[0].value=`"$($apiAppPermission.value)`""
-
-    # Update the API app registration with the new permission
-    az ad app update --id $apiApp --set $setArgument
+# Create an application role of given name and description
+Function CreateAppRole([string] $Name, [string] $Description) {
+    $appRole = New-Object Microsoft.Open.AzureAD.Model.AppRole
+    $appRole.AllowedMemberTypes = New-Object System.Collections.Generic.List[string]
+    $appRole.AllowedMemberTypes.Add("Application")
+    $appRole.DisplayName = $Name
+    $appRole.Id = New-Guid
+    $appRole.IsEnabled = $true
+    $appRole.Description = $Description
+    $appRole.Value = $Name
+    return $appRole
 }
+
+# Fetch the application object by ID
+$app = Get-AzureADApplication -Filter "appId eq '$existingApiApp'"
+
+# If the application doesn't have any roles, initialize an empty list
+if (-not $app.AppRoles) {
+    $app.AppRoles = New-Object System.Collections.Generic.List[Microsoft.Open.AzureAD.Model.AppRole]
+}
+
+# Create a new application role
+$newRole = CreateAppRole -Name "$functionAppName-access" -Description "Allows applications to access $functionAppName on behalf of the calling app."
+
+# Add the new role to the current list of app roles
+$appRoles = $app.AppRoles
+$appRoles.Add($newRole)
+
+# Update the application with the new set of app roles
+Set-AzureADApplication -ObjectId $app.ObjectId -AppRoles $appRoles
+
+Write-Host "Updated app roles for $apiAppName with AzureAD PowerShell Module"
 
 # # Register or update client application in Azure AD
 # $clientAppName = "$functionAppName-client"
