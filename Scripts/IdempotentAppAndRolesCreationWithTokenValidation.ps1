@@ -2,7 +2,7 @@
 Import-Module Microsoft.Graph.Applications
 
 $tenantId = "6998af00-286c-4e5e-8b3e-713471e8487f"
-$functionAppName = "FBelaccaFunctionTest1"
+$functionAppName = "FBelaccaFunctionTest2"
 $apiAppName = "$functionAppName-api"
 $apiAppIdentifierUri = "api://$functionAppName"
 $clientAppName = "$functionAppName-client"
@@ -36,7 +36,7 @@ $existingRole = $appRoles | Where-Object { $_.DisplayName -eq $appRole.DisplayNa
 if ($null -eq $existingRole) {
     Write-Host "Creating role $($appRole.DisplayName)"
     $appRoles += $appRole
-    Update-MgApplication -ApplicationId $apiAppId -AppRoles $appRoles
+    Update-MgApplication -ApplicationId $apiEntity.Id -AppRoles $appRoles
     $roleIdToAssign = $appRole.Id
 } else {
     Write-Host "Role $($appRole.DisplayName) already exists with id $($existingRole.Id)"
@@ -61,9 +61,10 @@ function Confirm-ServicePrincipal {
         Write-Host "Service Principal not found for appId $appId"
         $sp = New-MgServicePrincipal -AppId $appId
         Start-Sleep -Seconds 10
+        Write-Host "Service Principal created for appId $appId with id $($sp.Id)"
     }
     else{
-        Write-Host "Service Principal found for appId $appId"
+        Write-Host "Service Principal found for appId $appId with id $($sp.Id)"
     }
     return $sp.Id
 }
@@ -73,8 +74,9 @@ $clientAppServicePrincipalId = Confirm-ServicePrincipal -appId $clientAppId
 
 $existingAssignments = Get-MgServicePrincipalAppRoleAssignment -ServicePrincipalId $clientAppServicePrincipalId
 if ($existingAssignments.AppRoleId -notcontains $roleIdToAssign) {
-    Write-Host "Assigning role $roleIdToAssign to $clientAppServicePrincipalId"
+    Write-Host "Assigning role $roleIdToAssign to $clientAppServicePrincipalId with resourceId $apiServicePrincipalId, waiting 30 seconds for replication"
     New-MgServicePrincipalAppRoleAssignment -ServicePrincipalId $apiServicePrincipalId -PrincipalId $clientAppServicePrincipalId -ResourceId $apiServicePrincipalId -AppRoleId $roleIdToAssign
+    Start-Sleep -Seconds 30
 }
 else {
     Write-Host "Role $roleIdToAssign already assigned to $clientAppServicePrincipalId"
