@@ -35,15 +35,16 @@ namespace FunctionThatValidatesCertificatesInHeader
                     _logger.LogInformation($"Found {certs.Count()} certificates in the header");
                     foreach (var certHeaderValue in certs)
                     {
-                        // Extract the certificate part
-                        var startIndex = certHeaderValue.IndexOf("-----BEGIN CERTIFICATE-----", StringComparison.Ordinal);
-                        var endIndex = certHeaderValue.IndexOf("-----END CERTIFICATE-----", StringComparison.Ordinal) + "-----END CERTIFICATE-----".Length;
+                        // Decode the URL-encoded certificate
+                        var decodedValue = WebUtility.UrlDecode(certHeaderValue);
+
+                        // Extract the first valid certificate part found
+                        var startIndex = decodedValue.IndexOf("-----BEGIN CERTIFICATE-----", StringComparison.Ordinal);
+                        var endIndex = decodedValue.IndexOf("-----END CERTIFICATE-----", StringComparison.Ordinal) + "-----END CERTIFICATE-----".Length;
                         if (startIndex >= 0 && endIndex >= 0)
                         {
-                            var encodedCert = certHeaderValue.Substring(startIndex, endIndex - startIndex);
+                            var decodedCert = decodedValue.Substring(startIndex, endIndex - startIndex);
 
-                            // Decode the URL-encoded certificate
-                            var decodedCert = WebUtility.UrlDecode(encodedCert);
                             string certData = decodedCert.Replace("-----BEGIN CERTIFICATE-----", "")
                                                          .Replace("-----END CERTIFICATE-----", "")
                                                          .Trim();
