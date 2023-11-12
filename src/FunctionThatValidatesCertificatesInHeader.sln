@@ -5,6 +5,11 @@ VisualStudioVersion = 17.7.34221.43
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FunctionThatValidatesCertificatesInHeader", "FunctionThatValidatesCertificatesInHeader\FunctionThatValidatesCertificatesInHeader.csproj", "{F6855586-3E77-40F8-8F13-0DB5375BDB22}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub Actions", "GitHub Actions", "{0849A5C8-AE0A-49E4-92DE-C5AB1C1373CD}"
+	ProjectSection(SolutionItems) = preProject
+		..\.github\workflows\fbelacca-test-cv-capp-AutoDeployTrigger-960e7024-98fb-4f99-933b-5b16a2331f8d.yml = ..\.github\workflows\fbelacca-test-cv-capp-AutoDeployTrigger-960e7024-98fb-4f99-933b-5b16a2331f8d.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
