@@ -2,8 +2,13 @@
   "profiles": {
     "FunctionThatValidatesCertificatesInHeader": {
       "commandName": "Project",
-      "commandLineArgs": "--port 7164",
-      "launchBrowser": false
+      "commandLineArgs": "--port 7164"
+    },
+    "Docker": {
+      "commandName": "Docker",
+      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
+      "httpPort": 30898,
+      "useSSL": false
     }
   }
 }
