@@ -32,9 +32,17 @@ namespace FunctionThatValidatesCertificatesInHeader
 
                 if (req.Headers.TryGetValues("x-forwarded-client-cert", out var certs))
                 {
-                    foreach (var cert in certs)
+                    _logger.LogInformation($"Found {certs.Count()} certificates in the header");
+                    foreach (var encodedCert in certs)
                     {
-                        byte[] clientCertBytes = Convert.FromBase64String(cert);
+                        var decodedCert = WebUtility.UrlDecode(encodedCert);
+                        // Step 2: Extract the certificate data (implementation may vary based on actual string format)
+                        // In this example, it's a simple case, but you might need to parse the string more carefully.
+                        string certData = decodedCert.Replace("-----BEGIN CERTIFICATE-----", "")
+                                                     .Replace("-----END CERTIFICATE-----", "")
+                                                     .Trim();
+                        byte[] clientCertBytes = Convert.FromBase64String(certData);
+
                         X509Certificate2 clientCert = new X509Certificate2(clientCertBytes);
 
                         // Validate Thumbprint  
@@ -64,6 +72,7 @@ namespace FunctionThatValidatesCertificatesInHeader
                         response.WriteString("NotAfter: " + clientCert.NotAfter + "\n");
                         response.WriteString("SerialNumber: " + clientCert.SerialNumber + "\n");
                         response.WriteString("PublicKey: " + clientCert.PublicKey + "\n");
+                        response.WriteString("\n");
                     }
 
                     return response;
