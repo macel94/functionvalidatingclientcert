@@ -33,46 +33,58 @@ namespace FunctionThatValidatesCertificatesInHeader
                 if (req.Headers.TryGetValues("x-forwarded-client-cert", out var certs))
                 {
                     _logger.LogInformation($"Found {certs.Count()} certificates in the header");
-                    foreach (var encodedCert in certs)
+                    foreach (var certHeaderValue in certs)
                     {
-                        var decodedCert = WebUtility.UrlDecode(encodedCert);
-                        // Step 2: Extract the certificate data (implementation may vary based on actual string format)
-                        // In this example, it's a simple case, but you might need to parse the string more carefully.
-                        string certData = decodedCert.Replace("-----BEGIN CERTIFICATE-----", "")
-                                                     .Replace("-----END CERTIFICATE-----", "")
-                                                     .Trim();
-                        byte[] clientCertBytes = Convert.FromBase64String(certData);
+                        // Extract the certificate part
+                        var startIndex = certHeaderValue.IndexOf("-----BEGIN CERTIFICATE-----", StringComparison.Ordinal);
+                        var endIndex = certHeaderValue.IndexOf("-----END CERTIFICATE-----", StringComparison.Ordinal) + "-----END CERTIFICATE-----".Length;
+                        if (startIndex >= 0 && endIndex >= 0)
+                        {
+                            var encodedCert = certHeaderValue.Substring(startIndex, endIndex - startIndex);
 
-                        X509Certificate2 clientCert = new X509Certificate2(clientCertBytes);
+                            // Decode the URL-encoded certificate
+                            var decodedCert = WebUtility.UrlDecode(encodedCert);
+                            string certData = decodedCert.Replace("-----BEGIN CERTIFICATE-----", "")
+                                                         .Replace("-----END CERTIFICATE-----", "")
+                                                         .Trim();
 
-                        // Validate Thumbprint  
-                        //if (clientCert.Thumbprint != "yourthumprint")
-                        //{
-                        //    response.StatusCode = HttpStatusCode.BadRequest;
-                        //    response.WriteString("A valid client certificate was not used");
-                        //    return response;
-                        //}
+                            // Convert to certificate object
+                            byte[] clientCertBytes = Convert.FromBase64String(certData);
+                            X509Certificate2 clientCert = new X509Certificate2(clientCertBytes);
 
-                        // Validate NotBefore and NotAfter  
-                        //if (DateTime.Compare(DateTime.UtcNow, clientCert.NotBefore) < 0
-                        //            || DateTime.Compare(DateTime.UtcNow, clientCert.NotAfter) > 0)
-                        //{
-                        //    return new BadRequestObjectResult("client certificate not in alllowed time interval");
-                        //}
+                            // Validate Thumbprint  
+                            //if (clientCert.Thumbprint != "yourthumprint")
+                            //{
+                            //    response.StatusCode = HttpStatusCode.BadRequest;
+                            //    response.WriteString("A valid client certificate was not used");
+                            //    return response;
+                            //}
 
-                        //// Add further validation of certificate as required.  
+                            // Validate NotBefore and NotAfter  
+                            //if (DateTime.Compare(DateTime.UtcNow, clientCert.NotBefore) < 0
+                            //            || DateTime.Compare(DateTime.UtcNow, clientCert.NotAfter) > 0)
+                            //{
+                            //    return new BadRequestObjectResult("client certificate not in alllowed time interval");
+                            //}
 
-                        //return new OkObjectResult(GetEncodedRandomString());
+                            //// Add further validation of certificate as required.  
 
-                        // Send the decoded certificate multiple fields to the client, for example
-                        response.WriteString("Subject: " + clientCert.Subject + "\n");
-                        response.WriteString("Issuer: " + clientCert.Issuer + "\n");
-                        response.WriteString("Thumbprint: " + clientCert.Thumbprint + "\n");
-                        response.WriteString("NotBefore: " + clientCert.NotBefore + "\n");
-                        response.WriteString("NotAfter: " + clientCert.NotAfter + "\n");
-                        response.WriteString("SerialNumber: " + clientCert.SerialNumber + "\n");
-                        response.WriteString("PublicKey: " + clientCert.PublicKey + "\n");
-                        response.WriteString("\n");
+                            //return new OkObjectResult(GetEncodedRandomString());
+
+                            // Send the decoded certificate multiple fields to the client, for example
+                            response.WriteString("Subject: " + clientCert.Subject + "\n");
+                            response.WriteString("Issuer: " + clientCert.Issuer + "\n");
+                            response.WriteString("Thumbprint: " + clientCert.Thumbprint + "\n");
+                            response.WriteString("NotBefore: " + clientCert.NotBefore + "\n");
+                            response.WriteString("NotAfter: " + clientCert.NotAfter + "\n");
+                            response.WriteString("SerialNumber: " + clientCert.SerialNumber + "\n");
+                            response.WriteString("PublicKey: " + clientCert.PublicKey + "\n");
+                            response.WriteString("\n");
+                        }
+                        else
+                        {
+                            response.WriteString("Could not decode certificate with value: " + certHeaderValue);
+                        }
                     }
 
                     return response;
