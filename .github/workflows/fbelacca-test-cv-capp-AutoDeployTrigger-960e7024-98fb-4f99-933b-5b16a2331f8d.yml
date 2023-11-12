@@ -1,0 +1,42 @@
+name: Trigger auto deployment for fbelacca-test-cv-capp
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - 'src/FunctionThatValidatesCertificatesInHeader/**'
+    - '.github/workflows/fbelacca-test-cv-capp-AutoDeployTrigger-960e7024-98fb-4f99-933b-5b16a2331f8d.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.FBELACCATESTCVCAPP_AZURE_CREDENTIALS }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}/src/FunctionThatValidatesCertificatesInHeader 
+          registryUrl: fbtestcvapim.azurecr.io
+          registryUsername: ${{ secrets.FBELACCATESTCVCAPP_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.FBELACCATESTCVCAPP_REGISTRY_PASSWORD }}
+          containerAppName: fbelacca-test-cv-capp
+          resourceGroup: fbelacca-test-coopvoce-apim
+          imageToBuild: fbtestcvapim.azurecr.io/functionthatvalidatescertificatesinheader:${{ github.sha }}
+          dockerfilePath: Dockerfile
+
+     
+
