@@ -2,7 +2,7 @@
 Import-Module Microsoft.Graph.Applications
 
 $tenantId = "6998af00-286c-4e5e-8b3e-713471e8487f"
-$functionAppName = "FBelaccaFunctionTest2"
+$functionAppName = "FBelaccaFunctionTest"
 $apiAppName = "$functionAppName-api"
 $apiAppIdentifierUri = "api://$functionAppName"
 $clientAppName = "$functionAppName-client"
