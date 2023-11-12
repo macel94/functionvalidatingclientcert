@@ -27,38 +27,42 @@ namespace FunctionThatValidatesCertificatesInHeader
 
             var response = req.CreateResponse(HttpStatusCode.OK);
 
-            if (req.Headers.TryGetValues("X-ARR-ClientCert", out var certs))
+            if (req.Headers.TryGetValues("x-forwarded-client-cert", out var certs))
             {
-                byte[] clientCertBytes = Convert.FromBase64String(certs.First());
-                X509Certificate2 clientCert = new X509Certificate2(clientCertBytes);
+                foreach (var cert in certs)
+                {
+                    byte[] clientCertBytes = Convert.FromBase64String(cert);
+                    X509Certificate2 clientCert = new X509Certificate2(clientCertBytes);
 
-                // Validate Thumbprint  
-                //if (clientCert.Thumbprint != "yourthumprint")
-                //{
-                //    response.StatusCode = HttpStatusCode.BadRequest;
-                //    response.WriteString("A valid client certificate was not used");
-                //    return response;
-                //}
+                    // Validate Thumbprint  
+                    //if (clientCert.Thumbprint != "yourthumprint")
+                    //{
+                    //    response.StatusCode = HttpStatusCode.BadRequest;
+                    //    response.WriteString("A valid client certificate was not used");
+                    //    return response;
+                    //}
 
-                // Validate NotBefore and NotAfter  
-                //if (DateTime.Compare(DateTime.UtcNow, clientCert.NotBefore) < 0
-                //            || DateTime.Compare(DateTime.UtcNow, clientCert.NotAfter) > 0)
-                //{
-                //    return new BadRequestObjectResult("client certificate not in alllowed time interval");
-                //}
+                    // Validate NotBefore and NotAfter  
+                    //if (DateTime.Compare(DateTime.UtcNow, clientCert.NotBefore) < 0
+                    //            || DateTime.Compare(DateTime.UtcNow, clientCert.NotAfter) > 0)
+                    //{
+                    //    return new BadRequestObjectResult("client certificate not in alllowed time interval");
+                    //}
 
-                //// Add further validation of certificate as required.  
+                    //// Add further validation of certificate as required.  
 
-                //return new OkObjectResult(GetEncodedRandomString());
+                    //return new OkObjectResult(GetEncodedRandomString());
 
-                // Send the decoded certificate multiple fields to the client
-                response.WriteString("Subject: " + clientCert.Subject + "\n");
-                response.WriteString("Issuer: " + clientCert.Issuer + "\n");
-                response.WriteString("Thumbprint: " + clientCert.Thumbprint + "\n");
-                response.WriteString("NotBefore: " + clientCert.NotBefore + "\n");
-                response.WriteString("NotAfter: " + clientCert.NotAfter + "\n");
-                response.WriteString("SerialNumber: " + clientCert.SerialNumber + "\n");
-                response.WriteString("PublicKey: " + clientCert.PublicKey + "\n");
+                    // Send the decoded certificate multiple fields to the client, for example
+                    response.WriteString("Subject: " + clientCert.Subject + "\n");
+                    response.WriteString("Issuer: " + clientCert.Issuer + "\n");
+                    response.WriteString("Thumbprint: " + clientCert.Thumbprint + "\n");
+                    response.WriteString("NotBefore: " + clientCert.NotBefore + "\n");
+                    response.WriteString("NotAfter: " + clientCert.NotAfter + "\n");
+                    response.WriteString("SerialNumber: " + clientCert.SerialNumber + "\n");
+                    response.WriteString("PublicKey: " + clientCert.PublicKey + "\n");
+                }
+
                 return response;
             }
 
