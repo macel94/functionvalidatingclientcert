@@ -97,8 +97,8 @@ Write-Host "Creating secret for client app named $clientAppName with objectId $(
 $clientSecret = Add-MgApplicationPassword -ApplicationId $($clientAppEntity.Id) -PasswordCredential $passwordCred
 
 if ($null -ne $clientSecret.SecretText) {
-    Write-Host "Secret created: $($clientSecret.SecretText), waiting 10 seconds for replication"
-    Start-Sleep -Seconds 10
+    Write-Host "Secret created: $($clientSecret.SecretText), waiting 30 seconds for replication"
+    Start-Sleep -Seconds 30
 }
 else {
     Write-Host "Secret not created"
